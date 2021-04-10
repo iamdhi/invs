@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+
+
+<head>
+    <script src="https://d3js.org/d3.v5.js"></script>
+    <title> D3 Tutorial </title>
+
+    <style>
+        body{
+            margin: 20px;
+        }
+        svg{
+            padding: 50px;
+        }
+        .line{
+            fill: none;
+            stroke: #ffd24b;
+        }
+        .l1{
+            fill: none;
+            stroke: #35e24c;
+        }
+        .l2{
+            fill: none;
+            stroke: #e23535;
+        }
+        .l3{
+            fill: none;
+            stroke: #35cee2;
+        }.l4{
+             fill: none;
+             stroke: #3546e2;
+        }.l5{
+              fill: none;
+              stroke: #e235d9;
+        }
+
+
+    </style>
+</head>
+
+<body>
+<h2>D3 Linegraph</h2>
+
+<script>
+
+    var dataPath = "data/EuropeDisasters21st_All_Natural.csv";
+
+    var width = 600;					//specifies the width, height and margins of our SVG element
+    var height = 450;
+    var margin = 100;
+    var rowConverter = function (d) {
+        return {
+            Disastersubgroup: d.DisasterSubgroup,
+            month:d.StartMonth,
+            // value: d.VALUE
+        }
+
+    }
+
+    d3.csv(dataPath,rowConverter )
+        .then(function(data){
+            // console.log(data);
+            var countDisasterGroup = d3.nest()
+                .key(function(d) {
+                    return d.Disastersubgroup;
+                }).key(function (d) {
+                    return d.month;
+
+                })
+                .rollup(function(leaves) {
+                    return leaves.length;
+                }).entries(data);
+            console.log(countDisasterGroup);
+
+            var monthExtent = d3.extent(data, function (d) {
+                return parseInt(d.month);
+
+            });
+            console.log(monthExtent[1]+1);
+            monthExtent[1]=monthExtent[1]+0.5;
+            var xScale = d3.scaleLinear().domain(monthExtent).range([0, width]);
+            var DisastersubCounts = new Array();
+            countDisasterGroup.forEach(function (d) {
+                (d.values).forEach(function (e) {
+                    DisastersubCounts.push(e.value);
+
+                })
+
+            });
+            console.log("DisastersubCounts");
+            console.log(DisastersubCounts);
+
+            var DisastersubExtent = d3.extent(DisastersubCounts, function (d) {
+                return parseInt(d);
+
+            });
+            DisastersubExtent[1]=DisastersubExtent[1]+5;
+            console.log(DisastersubExtent[1]+5);
+            var yScale = d3.scaleLinear().domain(DisastersubExtent).range([height, 0]);
+            var x_axis = d3.axisBottom(xScale);
+            var y_axis = d3.axisLeft(yScale);
+
+            var svg = d3.select("body")		//creates an SVG element in the body
+                .append("svg")
+                .attr("width", width + margin)
+                .attr("height", height + margin);
+            svg.append("g").attr("class", "x axis")
+                .attr("transform", "translate(" + margin + "," + height + ")")
+                .call(x_axis)
+            svg.append("g").attr("class", "y axis")
+                .attr("transform", "translate(" + margin + ",0)")
+                .call(y_axis);
+
+            var lineGenerator = d3.line()
+                .x(function (d) {
+                    return margin + xScale(parseInt(d.key));
+                })
+                .y(function (d) {
+                    return yScale(parseInt(d.value));
+                });
+
+            var Meteorological = countDisasterGroup[0];
+
+            var uk = countDisasterGroup[1];
+            console.log(Meteorological);
+
+            svg.append("path").datum(Meteorological.values.sort(sortNumber))
+                .attr("class", "line").attr("d", lineGenerator);
+            svg.append("path").datum(countDisasterGroup[1].values.sort(sortNumber))
+                .attr("class", "line l1").attr("d", lineGenerator);
+            svg.append("path").datum(countDisasterGroup[2].values.sort(sortNumber))
+                .attr("class", "line l2").attr("d", lineGenerator);
+            svg.append("path").datum(countDisasterGroup[3].values.sort(sortNumber))
+                .attr("class", "line l3").attr("d", lineGenerator);
+            svg.append("path").datum(countDisasterGroup[4].values.sort(sortNumber))
+                .attr("class", "line l4").attr("d", lineGenerator);
+            svg.append("path").datum(countDisasterGroup[5].values.sort(sortNumber))
+                .attr("class", "line l5").attr("d", lineGenerator);
+            function sortNumber(a,b)
+            {
+                return a.key-0 - b.key-0
+            }
+
+        });
+</script>
+
+</body>
+
+</html>
